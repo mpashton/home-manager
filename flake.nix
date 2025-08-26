@@ -17,12 +17,12 @@
       pkgs = nixpkgs.legacyPackages.${system};
     in
     {
-      homeConfigurations."data" = home-manager.lib.homeManagerConfiguration {
+      homeConfigurations."data-juliad" = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
 
         # Specify your home configuration modules here, for example,
         # the path to your home.nix.
-        modules = [ ./home.nix ];
+        modules = [ ./data-juliad.nix ];
 
         # Optionally use extraSpecialArgs
         # to pass through arguments to home.nix
