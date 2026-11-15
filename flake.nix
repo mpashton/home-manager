@@ -3,21 +3,21 @@
 
   inputs = {
     # Specify the source of Home Manager and Nixpkgs.
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
+    pkgsUnstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     home-manager = {
-      url = "github:nix-community/home-manager/release-25.05";
+      url = "github:nix-community/home-manager/release-26.05";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nix-darwin = {
+      # must match the nixpkgs branch
+      url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
   outputs =
-    { nixpkgs, home-manager, ... }:
-    let
-      #system = "aarch64-darwin";
-      system = "x86_64-linux";
-      pkgs = nixpkgs.legacyPackages.${system};
-    in
-    {
+    { nixpkgs, home-manager, nix-darwin, pkgsUnstable, ... }: {
       darwinConfigurations."data-juliad" = nix-darwin.lib.darwinSystem {
         # darwinSystem only accepts: modules, specialArgs, system, pkgs, inputs.
         # Home Manager options belong inside a module, not here.
@@ -85,22 +85,11 @@
       #  # to pass through arguments to home.nix
       #};
 
-      nixosConfigurations."data-bingen" = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux"; # or aarch64-linux
-      specialArgs = { inherit pkgsUnstable; };
-      modules = [
-        ./hosts/bingen/configuration.nix   # your existing /etc/nixos/configuration.nix
-        home-manager.nixosModules.home-manager
-        {
-          home-manager = {
-            useGlobalPkgs = true;
-            useUserPackages = true;
-            extraSpecialArgs = { inherit pkgsUnstable; };
-            users.data = {
-              imports = [ ./common.nix ./data-bingen.nix ];
-            };
-          };
-        }
-      ];
+      # Standalone Home Manager (used with `home-manager switch --flake .#data-bingen`).
+      homeConfigurations."data-bingen" = home-manager.lib.homeManagerConfiguration {
+        pkgs = nixpkgs.legacyPackages."x86_64-linux";
+        extraSpecialArgs = { inherit pkgsUnstable; };
+        modules = [ ./common.nix ./data-bingen.nix ];
+      };
     };
 }
