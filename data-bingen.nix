@@ -43,6 +43,12 @@
 
     awscli2
     docker
+
+    (pkgs.writeShellScriptBin "mpa-tos3" ''
+      for f in $*; do
+        aws --profile mpashton s3 cp "$f" s3://mpashton-archive-873083246439-us-west-2-an
+      done
+     '')
   ];
 
   nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
