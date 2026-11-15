@@ -35,23 +35,8 @@
     #   echo "Hello, ${config.home.username}!"
     # '')
 
-    git
-    wget
-    curl
-    btop
-    neofetch
     usbutils
-    rsync
-    pstree
     iotop
-    zip
-    silver-searcher
-    just
-    bitwarden
-    fortune
-    #vim
-    tmux
-    btop
     htop
     #vscode-fhs
     imapfilter
@@ -99,13 +84,13 @@
     #EDITOR = "vim";
   };
 
-  programs = {
-    # Let Home Manager install and manage itself.
-    home-manager.enable = true;
+  #programs = {
+  #  # Let Home Manager install and manage itself.
+  #  home-manager.enable = true;
 
-    neovim = {
-      enable = true;
-      defaultEditor = true;
-    };
-  };
+  #  neovim = {
+  #    enable = true;
+  #    defaultEditor = true;
+  #  };
+  #};
 }

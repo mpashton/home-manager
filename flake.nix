@@ -18,26 +18,89 @@
       pkgs = nixpkgs.legacyPackages.${system};
     in
     {
-      homeConfigurations."data" = home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
+      darwinConfigurations."data-juliad" = nix-darwin.lib.darwinSystem {
+        # darwinSystem only accepts: modules, specialArgs, system, pkgs, inputs.
+        # Home Manager options belong inside a module, not here.
+        modules = [
+          home-manager.darwinModules.home-manager
+          (
+            { pkgs, ... }:
+            {
+              nixpkgs.hostPlatform = "aarch64-darwin";
+              nix.enable = false; # we are using Determinate Nix
+              system.primaryUser = "data";
+              system.stateVersion = 7;
 
-        # Specify your home configuration modules here, for example,
-        # the path to your home.nix.
-        modules = [ ./home.nix ];
+              users.users.data.home = "/Users/data";
 
-        # Optionally use extraSpecialArgs
-        # to pass through arguments to home.nix
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                extraSpecialArgs = { inherit pkgsUnstable; };
+                users.data =
+                  { pkgs, ... }:
+                  let
+                    unstable = import pkgsUnstable {
+                      inherit (pkgs.stdenv.hostPlatform) system;
+                      config.allowUnfree = true;
+                    };
+                  in
+                  {
+                    imports = [ ./common.nix ];
+
+                    home.packages = with pkgs; [
+                      usbutils
+                      #iotop -- no iotop for darwin
+                      openfpgaloader
+                      unstable.cue
+                    ];
+
+                    # Home Manager is pretty good at managing dotfiles. The primary way to manage
+                    # plain files is through 'home.file'.
+                    #home.file = {
+                    #  ".screenrc".source = dotfiles/screenrc;
+                    #};
+
+                    #home.sessionVariables = {
+                    #  EDITOR = "vim";
+                    #};
+
+                    # Let Home Manager install and manage itself.
+                    programs.home-manager.enable = true;
+                  };
+              };
+            }
+          )
+        ];
       };
 
-      homeConfigurations."data-bingen" = home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
+      #homeConfigurations."data-bingen" = home-manager.lib.homeManagerConfiguration {
+      #  inherit pkgs;
+      #
+      #  # Specify your home configuration modules here, for example,
+      #  # the path to your home.nix.
+      #  modules = [ ./data-bingen.nix ];
+      #
+      #  # Optionally use extraSpecialArgs
+      #  # to pass through arguments to home.nix
+      #};
 
-        # Specify your home configuration modules here, for example,
-        # the path to your home.nix.
-        modules = [ ./data-bingen.nix ];
-
-        # Optionally use extraSpecialArgs
-        # to pass through arguments to home.nix
-      };
+      nixosConfigurations."data-bingen" = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux"; # or aarch64-linux
+      specialArgs = { inherit pkgsUnstable; };
+      modules = [
+        ./hosts/bingen/configuration.nix   # your existing /etc/nixos/configuration.nix
+        home-manager.nixosModules.home-manager
+        {
+          home-manager = {
+            useGlobalPkgs = true;
+            useUserPackages = true;
+            extraSpecialArgs = { inherit pkgsUnstable; };
+            users.data = {
+              imports = [ ./common.nix ./data-bingen.nix ];
+            };
+          };
+        }
+      ];
     };
 }
